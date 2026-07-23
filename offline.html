@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#18181b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CODE VED">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="description" content="AI-Powered Assistant Engineered by Divy Patel">
+    <title>CODE VED | Offline</title>
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/logo-192.png">
+    <link rel="apple-touch-icon" href="/logo-192.png">
+    
+    <style>
+        :root {
+            --bg-primary: rgba(255, 255, 255, 0.7);
+            --bg-glass: rgba(255, 255, 255, 0.65);
+            --text-primary: #18181b;
+            --text-secondary: #52525b;
+            --accent-color: #0f9e78;
+            --border-light: rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 12px 32px rgba(0, 0, 0, 0.08);
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: rgba(24, 24, 27, 0.8);
+                --bg-glass: rgba(24, 24, 27, 0.65);
+                --text-primary: #fafafa;
+                --text-secondary: #a1a1aa;
+                --border-light: rgba(255, 255, 255, 0.1);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            tap-highlight-color: transparent;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, 
+                rgba(15, 158, 120, 0.1) 0%, 
+                rgba(24, 24, 27, 0.05) 50%, 
+                rgba(15, 158, 120, 0.1) 100%);
+            position: relative;
+        }
+
+        /* Animated background blobs */
+        .bg-blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.5;
+            animation: float 20s infinite ease-in-out;
+        }
+
+        .bg-blob:nth-child(1) {
+            width: 400px;
+            height: 400px;
+            background: rgba(15, 158, 120, 0.3);
+            top: -100px;
+            left: -100px;
+            animation-delay: 0s;
+        }
+
+        .bg-blob:nth-child(2) {
+            width: 300px;
+            height: 300px;
+            background: rgba(24, 24, 27, 0.2);
+            bottom: -50px;
+            right: -50px;
+            animation-delay: -5s;
+        }
+
+        .bg-blob:nth-child(3) {
+            width: 250px;
+            height: 250px;
+            background: rgba(15, 158, 120, 0.25);
+            top: 50%;
+            left: 50%;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -30px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(20px, 30px) scale(1.02); }
+        }
+
+        .offline-container {
+            text-align: center;
+            padding: 48px 32px;
+            max-width: 420px;
+            z-index: 10;
+        }
+
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--border-light);
+            border-radius: 24px;
+            padding: 40px 32px;
+            box-shadow: var(--shadow-lg);
+            animation: fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo-container {
+            margin-bottom: 24px;
+        }
+
+        .logo-container img {
+            width: 80px;
+            height: 80px;
+            border-radius: 20px;
+            object-fit: contain;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+            letter-spacing: -0.5px;
+        }
+
+        p {
+            font-size: 15px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .status-text {
+            font-size: 13px;
+            font-weight: 500;
+            color: #ef4444;
+        }
+
+        .retry-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #0f9e78 0%, #0a7d5f 100%);
+            color: white;
+            border: none;
+            border-radius: 14px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 4px 16px rgba(15, 158, 120, 0.3);
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        .retry-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(15, 158, 120, 0.4);
+        }
+
+        .retry-btn:active {
+            transform: translateY(0);
+        }
+
+        .retry-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .retry-btn.loading {
+            opacity: 0.8;
+            pointer-events: none;
+        }
+
+        .retry-btn.loading svg {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .home-link {
+            display: inline-block;
+            margin-top: 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .home-link:hover {
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background decorative blobs -->
+    <div class="bg-blob"></div>
+    <div class="bg-blob"></div>
+    <div class="bg-blob"></div>
+
+    <div class="offline-container">
+        <div class="glass-card">
+            <div class="logo-container">
+                <img src="/logo.png" alt="CODE VED Logo" onerror="this.style.display='none'">
+            </div>
+            
+            <h1>You're Offline</h1>
+            
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span class="status-text">No internet connection</span>
+            </div>
+            
+            <p>
+                Don't worry! You can still access cached content. 
+                Some features may be limited until you reconnect.
+            </p>
+            
+            <button class="retry-btn" id="retryBtn" onclick="retryConnection()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 4 23 10 17 10"></polyline>
+                    <polyline points="1 20 1 14 7 14"></polyline>
+                    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                Try Again
+            </button>
+            
+            <br>
+            <a href="/" class="home-link">Go to Home</a>
+        </div>
+    </div>
+
+    <script>
+        // Service Worker registration for offline page
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('Service Worker registered:', registration.scope);
+                })
+                .catch(error => {
+                    console.error('Service Worker registration failed:', error);
+                });
+        }
+
+        let isChecking = false;
+
+        async function retryConnection() {
+            if (isChecking) return;
+            
+            const btn = document.getElementById('retryBtn');
+            isChecking = true;
+            btn.classList.add('loading');
+            
+            try {
+                const response = await fetch('/?t=' + Date.now(), {
+                    method: 'HEAD',
+                    cache: 'no-cache'
+                });
+                
+                if (response.ok) {
+                    // Connection restored, redirect to home
+                    window.location.href = '/';
+                } else {
+                    throw new Error('No response');
+                }
+            } catch (error) {
+                // Still offline
+                isChecking = false;
+                btn.classList.remove('loading');
+                
+                // Show a brief shake animation
+                const card = document.querySelector('.glass-card');
+                card.style.animation = 'none';
+                card.offsetHeight; // Trigger reflow
+                card.style.animation = 'fadeInUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            }
+        }
+
+        // Auto-retry when connection is restored
+        window.addEventListener('online', () => {
+            window.location.href = '/';
+        });
+
+        // Listen for service worker messages
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', event => {
+                if (event.data && event.data.type === 'ONLINE_STATUS') {
+                    if (event.data.online) {
+                        window.location.href = '/';
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

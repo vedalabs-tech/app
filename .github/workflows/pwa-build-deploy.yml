@@ -1,0 +1,140 @@
+# PWA Build and Deploy Workflow
+
+name: Build and Deploy PWA
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: |
+          npm init -y
+          npm install --save-dev serve
+
+      - name: Validate PWA files
+        run: |
+          echo "Validating PWA structure..."
+          test -f index.html || exit 1
+          test -f manifest.json || exit 1
+          test -f sw.js || exit 1
+          test -f offline.html || exit 1
+          test -f logo.png || exit 1
+          test -f logo-192.png || exit 1
+          test -f logo-512.png || exit 1
+          test -d css || exit 1
+          test -d js || exit 1
+          echo "✓ All required PWA files present"
+
+      - name: Validate manifest.json
+        run: |
+          node -e "
+            const fs = require('fs');
+            const manifest = JSON.parse(fs.readFileSync('manifest.json', 'utf8'));
+            if (!manifest.name || !manifest.short_name || !manifest.start_url) {
+              console.error('Invalid manifest.json');
+              process.exit(1);
+            }
+            console.log('✓ manifest.json is valid');
+          "
+
+      - name: Build PWA package
+        run: |
+          mkdir -p dist
+          cp -r index.html manifest.json sw.js offline.html logo*.png dist/
+          cp -r css js dist/
+          echo "✓ PWA package built successfully"
+
+      - name: Create PWA archive
+        run: |
+          tar -czvf pwa-package.tar.gz dist/
+          echo "✓ PWA archive created: pwa-package.tar.gz"
+
+      - name: Upload PWA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pwa-package
+          path: |
+            dist/
+            pwa-package.tar.gz
+          retention-days: 30
+
+      - name: Deploy to GitHub Pages
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          force_orphan: true
+
+      - name: Deploy to Hugging Face Spaces (optional)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_REPO: ${{ secrets.HF_REPO }}
+        run: |
+          if [ -n "$HF_TOKEN" ] && [ -n "$HF_REPO" ]; then
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git config --global user.name "GitHub Actions"
+            
+            # Clone HF Spaces repo
+            git clone https://huggingface.co/spaces/$HF_REPO hf-spaces
+            cd hf-spaces
+            
+            # Copy built files
+            rm -rf *
+            cp -r ../dist/* .
+            
+            # Commit and push
+            git add .
+            git commit -m "Deploy PWA update from GitHub Actions" || echo "No changes to commit"
+            git push https://$HF_TOKEN@huggingface.co/spaces/$HF_REPO main
+            echo "✓ Deployed to Hugging Face Spaces"
+          else
+            echo "⊘ HF_TOKEN or HF_REPO not set, skipping HF deployment"
+          fi
+
+      - name: Lighthouse PWA Audit
+        uses: treosh/lighthouse-ci-action@v11
+        with:
+          urls: |
+            https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+
+      - name: Output deployment info
+        run: |
+          echo "============================================"
+          echo "PWA Build & Deploy Complete!"
+          echo "============================================"
+          echo ""
+          echo "📦 Package: pwa-package.tar.gz"
+          echo "🌐 GitHub Pages: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          echo ""
+          echo "To install locally:"
+          echo "  1. Download the pwa-package.tar.gz artifact"
+          echo "  2. Extract: tar -xzvf pwa-package.tar.gz"
+          echo "  3. Serve: npx serve dist/"
+          echo ""
+          echo "PWA Features:"
+          echo "  ✓ Offline support with Service Worker"
+          echo "  ✓ Installable on mobile and desktop"
+          echo "  ✓ Custom offline page"
+          echo "  ✓ Glassmorphism UI design"
+          echo "  ✓ Native app feel (no browser chrome)"
+          echo "============================================"
